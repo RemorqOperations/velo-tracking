@@ -105,3 +105,36 @@ body {
 .item .t { font-weight: 800; }
 .item .m { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .item .s { opacity: .8; font-size: 13px; }
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 420px) {
+  .grid3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.chip {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.chip.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
