@@ -1,1 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scan Entrée</title>
+  <link rel="stylesheet" href="../assets/app.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="tiny">ENTRÉE</div>
+      <button id="btnHistory" class="link">Historique</button>
+    </header>
 
+    <section class="card">
+      <div class="label">Compteur aujourd’hui</div>
+      <div id="counter" class="counter">0</div>
+      <div id="status" class="status">Prêt</div>
+    </section>
+
+    <section class="card">
+      <div class="label">Utilisateur</div>
+      <div class="row">
+        <input id="login" class="input" placeholder="login (ex: karim)" autocomplete="off"/>
+        <input id="pin" class="input" placeholder="pin" inputmode="numeric" type="password" />
+      </div>
+      <button id="btnSaveUser" class="btn secondary">Enregistrer</button>
+    </section>
+
+    <button id="btnScan" class="btn primary">SCANNER</button>
+
+    <!-- Scanner overlay -->
+    <div id="scannerOverlay" class="overlay hidden">
+      <div class="overlayTop">
+        <div class="overlayTitle">Scanner…</div>
+        <button id="btnClose" class="link">Fermer</button>
+      </div>
+      <div id="qr" class="qrbox"></div>
+    </div>
+
+    <!-- History overlay -->
+    <div id="historyOverlay" class="overlay hidden">
+      <div class="overlayTop">
+        <div class="overlayTitle">Historique</div>
+        <button id="btnCloseHistory" class="link">Fermer</button>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <input id="historyDate" class="input" type="date"/>
+          <button id="btnLoadHistory" class="btn secondary">Voir</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="historyList" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CONFIG ENTREE
+    window.APP_CONFIG = {
+      apiUrl: "COLLE_ICI_URL_APPS_SCRIPT", // <-- IMPORTANT
+      action: "ENTREE",
+      role: "CHAUFFEUR_ENTREE",
+      source: "web-entree"
+    };
+  </script>
+  <script src="../assets/app.js"></script>
+</body>
+</html>
