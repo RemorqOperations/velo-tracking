@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>Atelier</title>
 
   <link rel="stylesheet" href="../assets/app.css">
@@ -16,46 +18,40 @@
       <button id="btnHistory" class="link">Historique</button>
     </header>
 
-    <!-- Compteur -->
     <section class="card">
       <div class="label">Compteur aujourd’hui</div>
       <div id="counter" class="counter">0</div>
-      <div id="status" class="status">Prêt</div>
+      <div id="status" class="status">—</div>
     </section>
 
-    <!-- Login -->
     <section class="card">
       <div class="label">Utilisateur</div>
       <div class="row">
-        <input id="login" class="input" placeholder="login (ex: jean)" autocomplete="off"/>
-        <input id="pin" class="input" placeholder="pin" inputmode="numeric" type="password" />
+        <input id="login" class="input" placeholder="login" autocomplete="off"/>
+        <input id="pin" class="input" placeholder="PIN" inputmode="numeric" type="password" />
       </div>
-      <button id="btnSaveUser" class="btn secondary">Enregistrer</button>
+      <button id="btnSaveUser" class="btn secondary">Valider</button>
     </section>
 
-    <!-- Choix problème (3 gros boutons, peu de texte) -->
     <section class="card">
       <div class="label">Problème</div>
-
       <div class="grid3">
-        <button class="chip" data-prob="HS" id="probHS">HS</button>
-        <button class="chip" data-prob="MANQUE_PIECES" id="probMP">Manque pièces</button>
-        <button class="chip" data-prob="GROS_REPARATION" id="probGR">Grosse rep</button>
+        <button class="chip" data-prob="HS">HS</button>
+        <button class="chip" data-prob="MANQUE_PIECES">Manque pièces</button>
+        <button class="chip" data-prob="GROS_REPARATION">Grosse rep</button>
       </div>
 
       <div class="label" style="margin-top:10px;">Ou action</div>
       <div class="grid2">
-        <button class="chip" data-action="ENTREE" id="actEntree">Entrée</button>
-        <button class="chip" data-action="SORTIE" id="actSortie">Sortie</button>
+        <button class="chip" data-action="ENTREE">Entrée</button>
+        <button class="chip" data-action="SORTIE">Sortie</button>
       </div>
 
       <div id="choiceHint" class="status" style="margin-top:10px;">Choisir puis scanner</div>
     </section>
 
-    <!-- Gros bouton scan -->
     <button id="btnScan" class="btn primary">SCANNER</button>
 
-    <!-- Scanner overlay -->
     <div id="scannerOverlay" class="overlay hidden">
       <div class="overlayTop">
         <div class="overlayTitle">Scanner…</div>
@@ -64,7 +60,6 @@
       <div id="qr" class="qrbox"></div>
     </div>
 
-    <!-- History overlay -->
     <div id="historyOverlay" class="overlay hidden">
       <div class="overlayTop">
         <div class="overlayTitle">Historique</div>
@@ -85,14 +80,12 @@
   </div>
 
   <script>
-    // CONFIG ATELIER
     window.APP_CONFIG = {
       apiUrl: "https://script.google.com/macros/s/AKfycbwLDylnd2iGCWS7ZcwMpelehJrPEP7ruL3ikWNqtGHPTwXiqVP5DBd9Rc2u6utBkQPiTA/exec",
       role: "RESPONSABLE_ATELIER",
       source: "web-atelier"
     };
   </script>
-
   <script src="../assets/atelier.js"></script>
 </body>
 </html>
