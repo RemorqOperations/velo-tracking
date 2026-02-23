@@ -19,26 +19,31 @@
   const btnLoadHistory = document.getElementById("btnLoadHistory");
   const historyList = document.getElementById("historyList");
 
-  // ---- storage user
-  function loadUser() {
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    if (u.login) elLogin.value = u.login;
-    if (u.pin) elPin.value = u.pin;
-  }
-  function saveUser() {
-    const u = { login: elLogin.value.trim(), pin: elPin.value.trim() };
-    localStorage.setItem("user", JSON.stringify(u));
-    elStatus.textContent = "Utilisateur enregistré";
+  // ---- helpers
+  function vibrate() {
+    if (navigator.vibrate) navigator.vibrate([80]);
   }
 
-  // ---- date helpers
   function todayISO() {
     const d = new Date();
     const pad = n => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   }
 
-  // ---- api helpers
+  function showScanner() { overlay.classList.remove("hidden"); }
+  function hideScanner() { overlay.classList.add("hidden"); }
+
+  function loadUser() {
+    const u = JSON.parse(localStorage.getItem("user") || "{}");
+    if (u.login) elLogin.value = u.login;
+    if (u.pin) elPin.value = u.pin;
+    return u;
+  }
+
+  function saveUserLocal(login, pin) {
+    localStorage.setItem("user", JSON.stringify({ login, pin }));
+  }
+
   async function apiGet(params) {
     const url = new URL(cfg.apiUrl);
     Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
@@ -49,81 +54,100 @@
   async function apiPost(payload) {
     const res = await fetch(cfg.apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" }, // Apps Script friendly
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
     return await res.json();
   }
 
-  // ---- counter
+  // ---- login validation (bloque le scan tant que pas validé)
+  async function validateUser() {
+    const login = elLogin.value.trim();
+    const pin = elPin.value.trim();
+
+    if (!login || !pin) {
+      elStatus.textContent = "Login et PIN requis";
+      btnScan.disabled = true;
+      vibrate();
+      return false;
+    }
+
+    elStatus.textContent = "Validation…";
+    try {
+      const data = await apiGet({ op: "validate", login, pin });
+      if (data.ok) {
+        saveUserLocal(login, pin);
+        btnScan.disabled = false;
+        elStatus.textContent = "Accès autorisé ✅";
+        return true;
+      }
+      btnScan.disabled = true;
+      elStatus.textContent = "Login/PIN incorrect ❌";
+      vibrate();
+      return false;
+    } catch {
+      btnScan.disabled = true;
+      elStatus.textContent = "Erreur réseau ❌";
+      return false;
+    }
+  }
+
+  // ---- counter & history
   async function refreshCounter() {
     try {
       const data = await apiGet({ op: "count", date: todayISO(), source: cfg.source });
       if (data.ok) elCounter.textContent = String(data.count || 0);
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
-  // ---- history
   async function loadHistory() {
     const d = historyDate.value || todayISO();
     historyList.innerHTML = "Chargement…";
     try {
       const data = await apiGet({ op: "history", date: d, source: cfg.source });
-      if (!data.ok) {
-        historyList.textContent = "Erreur historique";
-        return;
-      }
-      if (!data.rows.length) {
-        historyList.textContent = "Aucun scan";
-        return;
-      }
+      if (!data.ok) { historyList.textContent = "Erreur historique"; return; }
+      if (!data.rows.length) { historyList.textContent = "Aucun scan"; return; }
+
       historyList.innerHTML = data.rows.map(r => {
-        const idShort = (r.velo_id || "").slice(0, 12);
+        const idShort = (r.velo_id || "").slice(0, 14);
         const pb = r.probleme ? ` • ${r.probleme}` : "";
-        return `<div class="item"><div class="t">${r.time}</div><div class="m">${idShort}</div><div class="s">${r.action}${pb}</div></div>`;
+        return `<div class="item">
+          <div class="t">${r.time}</div>
+          <div class="m">${idShort}</div>
+          <div class="s">${r.action}${pb}</div>
+        </div>`;
       }).join("");
     } catch {
       historyList.textContent = "Erreur réseau";
     }
   }
 
-  // ---- scanner
+  // ---- scanner: 2 scans -> 2 vibrations -> fermeture
   let html5QrCode = null;
   let scanCount = 0;
-  let lastVelo = "";
-
-  function vibrate() {
-    if (navigator.vibrate) navigator.vibrate(100);
-  }
-
-  function showScanner() {
-    overlay.classList.remove("hidden");
-  }
-
-  function hideScanner() {
-    overlay.classList.add("hidden");
-  }
+  let lastText = "";
 
   async function stopScanner() {
     if (!html5QrCode) return;
-    try {
-      await html5QrCode.stop();
-      await html5QrCode.clear();
-    } catch {}
+    try { await html5QrCode.stop(); } catch {}
+    try { await html5QrCode.clear(); } catch {}
     html5QrCode = null;
   }
 
   async function openScanner() {
-    scanCount = 0;
-    lastVelo = "";
+    // refuse si pas validé
+    if (btnScan.disabled) {
+      elStatus.textContent = "Valide ton login/PIN";
+      vibrate();
+      return;
+    }
 
+    scanCount = 0;
+    lastText = "";
     showScanner();
-    elStatus.textContent = "Scan en cours…";
+    elStatus.textContent = "Scan…";
 
     html5QrCode = new Html5Qrcode("qr");
-
     const config = { fps: 12, qrbox: { width: 280, height: 280 } };
 
     await html5QrCode.start(
@@ -131,18 +155,17 @@
       config,
       async (decodedText) => {
         scanCount++;
-        lastVelo = decodedText;
+        lastText = decodedText;
 
-        // 1) vibration à chaque scan
+        // vibration à CHAQUE scan
         vibrate();
 
-        // 2) envoyer au sheet
-        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        const u = loadUser();
         const payload = {
           velo_id: decodedText,
           action: cfg.action,
           probleme: "",
-          utilisateur: (u.login || "unknown"),
+          utilisateur: u.login || "unknown",
           role: cfg.role,
           source: cfg.source,
           login: u.login || "",
@@ -151,16 +174,13 @@
 
         try {
           const r = await apiPost(payload);
-          if (r.ok) {
-            elStatus.textContent = r.deduped ? "Scan confirmé (déjà loggé)" : "Scan enregistré";
-          } else {
-            elStatus.textContent = "Erreur: " + (r.error || "API");
-          }
+          if (r.ok) elStatus.textContent = r.deduped ? "Confirmé ✅" : "Enregistré ✅";
+          else elStatus.textContent = "Refus ❌ " + (r.error || "");
         } catch {
-          elStatus.textContent = "Erreur réseau";
+          elStatus.textContent = "Erreur réseau ❌";
         }
 
-        // 3) au 2e scan -> fermer
+        // au 2e scan: fermer caméra
         if (scanCount >= 2) {
           await stopScanner();
           hideScanner();
@@ -168,21 +188,17 @@
           elStatus.textContent = "Terminé ✅";
         }
       },
-      () => {
-        // on ignore les erreurs de lecture
-      }
+      () => {}
     );
   }
 
-  // ---- wiring
-  btnSaveUser?.addEventListener("click", saveUser);
+  // ---- UI wiring
+  btnSaveUser?.addEventListener("click", validateUser);
 
-  btnScan?.addEventListener("click", async () => {
-    // si user non renseigné => on force
-    const u = { login: elLogin.value.trim(), pin: elPin.value.trim() };
-    localStorage.setItem("user", JSON.stringify(u));
-    await openScanner();
-  });
+  // si l’utilisateur tape pin/login puis Enter, valide
+  elPin?.addEventListener("keydown", (e) => { if (e.key === "Enter") validateUser(); });
+
+  btnScan?.addEventListener("click", openScanner);
 
   btnClose?.addEventListener("click", async () => {
     await stopScanner();
@@ -202,7 +218,15 @@
 
   btnLoadHistory?.addEventListener("click", loadHistory);
 
-  // init
+  // ---- init
+  btnScan.disabled = true;
   loadUser();
   refreshCounter();
+
+  // auto-validate si user déjà enregistré
+  if (elLogin.value.trim() && elPin.value.trim()) {
+    validateUser();
+  } else {
+    elStatus.textContent = "Entrer login + PIN";
+  }
 })();
