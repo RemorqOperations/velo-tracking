@@ -1,75 +1,81 @@
-
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scan Sortie</title>
-  <link rel="stylesheet" href="../assets/app.css">
-  <script src="https://unpkg.com/html5-qrcode"></script>
-</head>
-<body>
-  <div class="wrap">
-    <header class="top">
-      <div class="tiny">SORTIE</div>
-      <button id="btnHistory" class="link">Historique</button>
-    </header>
-
-    <section class="card">
-      <div class="label">Compteur aujourd’hui</div>
-      <div id="counter" class="counter">0</div>
-      <div id="status" class="status">Prêt</div>
-    </section>
-
-    <section class="card">
-      <div class="label">Utilisateur</div>
-      <div class="row">
-        <input id="login" class="input" placeholder="login (ex: karim)" autocomplete="off"/>
-        <input id="pin" class="input" placeholder="pin" inputmode="numeric" type="password" />
-      </div>
-      <button id="btnSaveUser" class="btn secondary">Enregistrer</button>
-    </section>
-
-    <button id="btnScan" class="btn primary">SCANNER</button>
-
-    <!-- Scanner overlay -->
-    <div id="scannerOverlay" class="overlay hidden">
-      <div class="overlayTop">
-        <div class="overlayTitle">Scanner…</div>
-        <button id="btnClose" class="link">Fermer</button>
-      </div>
-      <div id="qr" class="qrbox"></div>
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remorq QC</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f7fb;
+      }
+      .card {
+        max-width: 700px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .status {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #eef4ff;
+      }
+      .ok {
+        color: #0a7a2f;
+        font-weight: bold;
+      }
+      .err {
+        color: #b42318;
+        font-weight: bold;
+      }
+      button {
+        margin-top: 16px;
+        padding: 12px 18px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      #result {
+        margin-top: 16px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Remorq QC Bikes</h1>
+      <div class="status">Connexion Apps Script OK</div>
+      <button onclick="testSheet()">Tester la connexion au Google Sheet</button>
+      <div id="result"></div>
     </div>
 
-    <!-- History overlay -->
-    <div id="historyOverlay" class="overlay hidden">
-      <div class="overlayTop">
-        <div class="overlayTitle">Historique</div>
-        <button id="btnCloseHistory" class="link">Fermer</button>
-      </div>
+    <script>
+      function testSheet() {
+        const result = document.getElementById('result');
+        result.innerHTML = 'Chargement...';
 
-      <div class="card">
-        <div class="row">
-          <input id="historyDate" class="input" type="date"/>
-          <button id="btnLoadHistory" class="btn secondary">Voir</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div id="historyList" class="list"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // CONFIG ENTREE
-    window.APP_CONFIG = {
-      apiUrl: "https://script.google.com/macros/s/AKfycbwJ8hcP0_3EYiukMarSj6YCace1O3EvRPCaFHA758bf5tcPdz6pzVJGbgoCCBPQn_7oYQ/exec", // <-- IMPORTANT
-      action: "ENTREE",
-      role: "CHAUFFEUR_ENTREE",
-      source: "web-entree"
-    };
-  </script>
-  <script src="../assets/app.js"></script>
-</body>
+        google.script.run
+          .withSuccessHandler(function(data) {
+            result.innerHTML =
+              '<span class="ok">Connexion au Google Sheet réussie</span>\n\n' +
+              'Nom du fichier : ' + data.name + '\n' +
+              'Onglets trouvés : ' + data.sheets.join(', ');
+          })
+          .withFailureHandler(function(error) {
+            result.innerHTML =
+              '<span class="err">Erreur</span>\n\n' + error.message;
+          })
+          .getSpreadsheetInfo();
+      }
+    </script>
+  </body>
 </html>
