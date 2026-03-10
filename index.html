@@ -1,81 +1,18 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Remorq QC</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 24px;
-        background: #f6f7fb;
-      }
-      .card {
-        max-width: 700px;
-        margin: 40px auto;
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      }
-      h1 {
-        margin-top: 0;
-      }
-      .status {
-        margin-top: 16px;
-        padding: 12px;
-        border-radius: 10px;
-        background: #eef4ff;
-      }
-      .ok {
-        color: #0a7a2f;
-        font-weight: bold;
-      }
-      .err {
-        color: #b42318;
-        font-weight: bold;
-      }
-      button {
-        margin-top: 16px;
-        padding: 12px 18px;
-        border: 0;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      #result {
-        margin-top: 16px;
-        white-space: pre-wrap;
-      }
-    </style>
-  </head>
-  <body>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remorq QC</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
     <div class="card">
-      <h1>Remorq QC Bikes</h1>
-      <div class="status">Connexion Apps Script OK</div>
-      <button onclick="testSheet()">Tester la connexion au Google Sheet</button>
-      <div id="result"></div>
+      <h1>Remorq QC</h1>
+      <p>Application de contrôle réparation vélos Lime</p>
+      <a class="btn" href="login.html">Accéder à l’application</a>
     </div>
-
-    <script>
-      function testSheet() {
-        const result = document.getElementById('result');
-        result.innerHTML = 'Chargement...';
-
-        google.script.run
-          .withSuccessHandler(function(data) {
-            result.innerHTML =
-              '<span class="ok">Connexion au Google Sheet réussie</span>\n\n' +
-              'Nom du fichier : ' + data.name + '\n' +
-              'Onglets trouvés : ' + data.sheets.join(', ');
-          })
-          .withFailureHandler(function(error) {
-            result.innerHTML =
-              '<span class="err">Erreur</span>\n\n' + error.message;
-          })
-          .getSpreadsheetInfo();
-      }
-    </script>
-  </body>
+  </div>
+</body>
 </html>
